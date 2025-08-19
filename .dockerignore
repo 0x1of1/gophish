@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CONTRIBUTING.md
+SECURITY.md
+LICENSE
+VERSION
+
+# Development files
+*.md
+*.txt
+*.log
+
+# Build artifacts
+dist/
+build/
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Ansible
+ansible-playbook/
+
+# Test files
+*_test.go
+testdata/
+
+# Temporary files
+*.tmp
+*.temp
