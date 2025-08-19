@@ -1,8 +1,8 @@
 # Build stage
 FROM golang:1.21-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache git ca-certificates tzdata
+# Install build dependencies including gcc for CGO
+RUN apk add --no-cache git ca-certificates tzdata gcc musl-dev
 
 # Set working directory
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o gophish .
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk --no-cache add ca-certificates tzdata sqlite
+RUN apk --no-cache add ca-certificates tzdata sqlite wget
 
 # Create non-root user
 RUN addgroup -g 1001 -S gophish && \
