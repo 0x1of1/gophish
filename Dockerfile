@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 # Install build dependencies including gcc for CGO
 RUN apk add --no-cache git ca-certificates tzdata gcc musl-dev
@@ -16,8 +16,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o gophish .
+# Build the application with specific build tags for SQLite compatibility
+RUN CGO_ENABLED=1 GOOS=linux go build -tags "sqlite_omit_load_extension" -a -installsuffix cgo -o gophish .
 
 # Final stage
 FROM alpine:latest
