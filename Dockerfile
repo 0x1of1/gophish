@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     wget \
     sed \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user

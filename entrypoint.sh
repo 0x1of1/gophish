@@ -12,24 +12,30 @@ fi
 # Trim trailing slash if present
 EXTERNAL_URL="${EXTERNAL_URL%/}"
 
-# Rewrite admin_server.listen_url in config.json to bind to $PORT
-# Use | as sed delimiter and escape replacement content
-SED_LISTEN_FROM='"listen_url": "0.0.0.0:3333"'
-SED_LISTEN_TO='"listen_url": "0.0.0.0:'"${ADMIN_PORT}"'""'
-sed -i "s|$SED_LISTEN_FROM|$SED_LISTEN_TO|" /app/config.json || true
+# Safely update config.json using jq
+TMP_CFG="/app/config.json.tmp"
+# Start from current config
+cp /app/config.json "$TMP_CFG"
 
-# If we have an external URL, set trusted_origins accordingly
+# Update listen_url
+jq \
+  --arg port "$ADMIN_PORT" \
+  '.admin_server.listen_url = ("0.0.0.0:" + $port)' \
+  "$TMP_CFG" > "$TMP_CFG.1" && mv "$TMP_CFG.1" "$TMP_CFG"
+
+# If EXTERNAL_URL is provided, set trusted_origins to that value when currently empty
 if [ -n "$EXTERNAL_URL" ]; then
-  # JSON-escape any double quotes in EXTERNAL_URL (unlikely) and use sed with | delimiter
-  ESC_URL="$EXTERNAL_URL"
-  # Replace an empty array with the external URL; if already set, leave as-is
-  if grep -q '"trusted_origins": \[\]' /app/config.json; then
-    sed -i "s|\"trusted_origins\": \[\]|\"trusted_origins\": [\"$ESC_URL\"]|" /app/config.json || true
-  fi
+  jq \
+    --arg url "$EXTERNAL_URL" \
+    'if (.admin_server.trusted_origins | length) == 0 then .admin_server.trusted_origins = [$url] else . end' \
+    "$TMP_CFG" > "$TMP_CFG.1" && mv "$TMP_CFG.1" "$TMP_CFG"
   echo "Configured trusted_origins to include: ${EXTERNAL_URL}"
 else
   echo "RENDER_EXTERNAL_URL not set; leaving trusted_origins as-is"
 fi
+
+# Replace original config
+mv "$TMP_CFG" /app/config.json
 
 # Log effective binding
 echo "Starting Gophish admin on 0.0.0.0:${ADMIN_PORT}"
