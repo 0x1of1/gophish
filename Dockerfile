@@ -64,10 +64,12 @@ USER gophish
 # Expose ports
 EXPOSE 3333 80
 
+# Default env for local runs; Render will inject PORT at runtime
+ENV PORT=3333
+
 # Health check (admin UI on /login)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://127.0.0.1:${PORT:-3333}/login || exit 1
+    CMD wget --quiet --tries=1 --spider http://127.0.0.1:${PORT}/login || exit 1
 
 # Run the application via entrypoint to set PORT
-env PORT=3333
 ENTRYPOINT ["/app/entrypoint.sh"]

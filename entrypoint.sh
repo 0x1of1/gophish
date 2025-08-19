@@ -13,13 +13,18 @@ fi
 EXTERNAL_URL="${EXTERNAL_URL%/}"
 
 # Rewrite admin_server.listen_url in config.json to bind to $PORT
-sed -i "s/\"listen_url\": \"0.0.0.0:3333\"/\"listen_url\": \"0.0.0.0:${ADMIN_PORT}\"/" /app/config.json
+# Use | as sed delimiter and escape replacement content
+SED_LISTEN_FROM='"listen_url": "0.0.0.0:3333"'
+SED_LISTEN_TO='"listen_url": "0.0.0.0:'"${ADMIN_PORT}"'""'
+sed -i "s|$SED_LISTEN_FROM|$SED_LISTEN_TO|" /app/config.json || true
 
 # If we have an external URL, set trusted_origins accordingly
 if [ -n "$EXTERNAL_URL" ]; then
+  # JSON-escape any double quotes in EXTERNAL_URL (unlikely) and use sed with | delimiter
+  ESC_URL="$EXTERNAL_URL"
   # Replace an empty array with the external URL; if already set, leave as-is
   if grep -q '"trusted_origins": \[\]' /app/config.json; then
-    sed -i "s/\"trusted_origins\": \[\]/\"trusted_origins\": [\"${EXTERNAL_URL}\"]/" /app/config.json
+    sed -i "s|\"trusted_origins\": \[\]|\"trusted_origins\": [\"$ESC_URL\"]|" /app/config.json || true
   fi
   echo "Configured trusted_origins to include: ${EXTERNAL_URL}"
 else
