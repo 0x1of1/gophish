@@ -10,8 +10,6 @@ services:
         value: release
       - key: PORT
         value: 3333
-    buildCommand: docker build -t gophish .
-    startCommand: docker run -p $PORT:3333 gophish
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeploy: true
