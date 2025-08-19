@@ -4,12 +4,10 @@ services:
     env: docker
     plan: starter
     region: oregon
-    healthCheckPath: /
+    healthCheckPath: /login
     envVars:
       - key: GIN_MODE
         value: release
-      - key: PORT
-        value: 3333
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeploy: true

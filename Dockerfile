@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     sqlite3 \
     wget \
+    sed \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -41,13 +42,17 @@ RUN groupadd -g 1001 gophish && \
 # Set working directory
 WORKDIR /app
 
-# Copy binary from builder stage
+# Copy binary and assets from builder
 COPY --from=builder /app/gophish .
 COPY --from=builder /app/config.json .
 COPY --from=builder /app/db ./db
 COPY --from=builder /app/static ./static
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/VERSION .
+
+# Copy entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Create necessary directories
 RUN mkdir -p /tmp && \
@@ -59,9 +64,10 @@ USER gophish
 # Expose ports
 EXPOSE 3333 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3333/ || exit 1
+# Health check (admin UI on /login)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://127.0.0.1:${PORT:-3333}/login || exit 1
 
-# Run the application
-CMD ["./gophish"]
+# Run the application via entrypoint to set PORT
+env PORT=3333
+ENTRYPOINT ["/app/entrypoint.sh"]
